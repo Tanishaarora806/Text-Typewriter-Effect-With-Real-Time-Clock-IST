@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Typewriter + Live Clock</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 10px;
+      font-family: monospace;
+      /* Slightly smaller font size (was 20px before) */
+      font-size: 18px;
+      background-color: #1E1E1E;
+      color: #D4D4D4;
+      cursor: default;
+    }
+    /* Use pre-wrap so newlines and indentation are preserved */
+    .typewriter {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      user-select: none;
+      caret-color: transparent;
+      margin: 0;
+    }
+    a {
+      color: #007ACC;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    .cursor {
+      display: inline-block;
+      width: 1px;
+      height: 1em;
+      background-color: currentColor;
+      margin-left: 2px;
+      animation: blink 0.7s steps(1) infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="line1" class="typewriter"></div>   <!-- "📍 Based in IN" -->
+  <div id="line2" class="typewriter"></div>   <!-- "🕒" + typed date/time -->
+  <div id="rest"  class="typewriter"></div>   <!-- The remaining lines -->
+
+  <script>
+    // 1) Text segments
+    const segment1 = `📍 Based in IN`; 
+    let segment2 = ""; // will be "🕒 " + snapshot of current time
+    const segment3 = `
+💼 Currently running real experiments on
+  >> <getting more users to sign up through paid and organic> &&
+     <finding user drop off touchpoints in the app and fixing them>
+     <improving retention by making users return and engage more> @ unikon.ai
+⚡ 21`;
+
+    // Typing speed
+    const typingDelay = 50;
+
+    // Grab DOM containers
+    const line1El = document.getElementById("line1");
+    const line2El = document.getElementById("line2");
+    const restEl  = document.getElementById("rest");
+
+    // 2) Syntax highlighting
+    function highlightAndFormat(text) {
+      let replaced = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\n/g, "<br>");
+
+      replaced = replaced
+        .replace(/&gt;&gt;/g, '<span style="color:#569CD6;">&gt;&gt;</span>')
+        .replace(/&&/g, '<span style="color:#D7BA7D;">&&</span>')
+        .replace(/&lt;getting more users to sign up through paid and organic&gt;/g,
+          '<span style="color:#6A9955;">&lt;getting more users to sign up through paid and organic&gt;</span>')
+        .replace(/&lt;finding user drop off touchpoints in the app and fixing them&gt;/g,
+          '<span style="color:#C586C0;">&lt;finding user drop off touchpoints in the app and fixing them&gt;</span>')
+        .replace(/&lt;improving retention by making users return and engage more&gt;/g,
+          '<span style="color:#D16969;">&lt;improving retention by making users return and engage more&gt;</span>')
+        .replace(/@ unikon\.ai/g,
+          '<a href="https://unikon.ai/" target="_blank"><u><em>@ unikon.ai</em></u></a>');
+
+      return replaced;
+    }
+
+    // 3) Typewriter function
+    function typeText(text, container, onDone) {
+      let i = 0;
+      let typedSoFar = "";
+
+      function step() {
+        if (i < text.length) {
+          typedSoFar += text.charAt(i++);
+          container.innerHTML = highlightAndFormat(typedSoFar) + '<span class="cursor"></span>';
+          setTimeout(step, typingDelay);
+        } else {
+          container.innerHTML = highlightAndFormat(typedSoFar);
+          if (onDone) onDone();
+        }
+      }
+      step();
+    }
+
+    // 4) Clock updates
+    function startClockUpdates() {
+      const iconPrefix = "🕒 ";
+      function updateClock() {
+        const now = new Date();
+        const indiaTime = now.toLocaleString("en-IN", {
+          timeZone: "Asia/Kolkata",
+          hour12: true
+        });
+        line2El.innerHTML = highlightAndFormat(iconPrefix + indiaTime);
+      }
+      setInterval(updateClock, 1000);
+    }
+
+    // 5) Sequence
+    function getCurrentIndiaTimeString() {
+      const now = new Date();
+      return now.toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour12: true });
+    }
+
+    setTimeout(() => {
+      // Type line1
+      typeText(segment1, line1El, () => {
+        // Build segment2 with a one-time snapshot
+        const snapshot = getCurrentIndiaTimeString();
+        segment2 = `🕒 ${snapshot}`;
+
+        // Type line2
+        typeText(segment2, line2El, () => {
+          // Once line2 is typed, start continuous updates
+          startClockUpdates();
+
+          // Finally type the rest
+          typeText(segment3, restEl);
+        });
+      });
+    }, 500);
+  </script>
+</body>
+</html>
